@@ -8,14 +8,6 @@ export class HomeService {
   getHello(): string {
     return 'Hello World!';
   }
-  // getMusicInfo(): any {
-  //   console.log('进入service');
-  //   return this.httpService
-  //     .get(
-  //       'https://pure-music-service.vercel.app/song/url?br=320000&id=591340934',
-  //     )
-  //     .pipe(map((response) => response.data));
-  // }
   async getBannerInfo(): Promise<any> {
     const observable = this.httpService
       .get('https://pure-music-service.vercel.app/banner?type=1')
@@ -23,9 +15,13 @@ export class HomeService {
     return await lastValueFrom(observable);
   }
   async getRecommendSongs(): Promise<any> {
-    const observable = this.httpService
-      .get('https://pure-music-service.vercel.app/recommend/songs')
-      .pipe(map((response) => response.data));
-    return await lastValueFrom(observable);
+    try {
+      const observable = this.httpService
+        .get(`https://pure-music-service.vercel.app/recommend/songs`)
+        .pipe(map((response) => response.data));
+      return await lastValueFrom(observable);
+    } catch (error) {
+      return [];
+    }
   }
 }
