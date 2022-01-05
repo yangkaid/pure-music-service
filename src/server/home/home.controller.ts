@@ -15,6 +15,7 @@ export class HomeController {
     const banners = [];
     bannerArr.forEach((item) => {
       const { pic, url } = item;
+      console.log(pic, url);
       banners.push({ pic, url });
     });
     return banners;
