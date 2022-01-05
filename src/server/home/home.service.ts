@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { lastValueFrom, map } from 'rxjs';
-import { response } from 'express';
 
 @Injectable()
 export class HomeService {
@@ -9,11 +8,18 @@ export class HomeService {
   getHello(): string {
     return 'Hello World!';
   }
-  async getBannerInfo(): Promise<any> {
+  async getApiData(url): Promise<any> {
     const observable = this.httpService
-      .get('/banner?type=1')
+      .get(url)
       .pipe(map((response) => response.data));
-    const res = await lastValueFrom(observable);
+    return lastValueFrom(observable);
+  }
+  async getBannerInfo(): Promise<any> {
+    // const observable = this.httpService
+    //   .get('/banner?type=1')
+    //   .pipe(map((response) => response.data));
+    // const res = await lastValueFrom(observable);
+    const res = await this.getApiData('/banner?type=1');
     const bannerArr = res.banners;
     const banners = [];
     bannerArr.forEach((item) => {

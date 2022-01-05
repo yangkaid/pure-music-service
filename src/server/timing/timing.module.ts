@@ -1,7 +1,10 @@
 import { Module } from '@nestjs/common';
+import { TimingService } from './timing.service';
 import { HttpModule } from '@nestjs/axios';
-import { HomeController } from './home.controller';
-import { HomeService } from './home.service';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Album, Songs } from './entity/timing.entity';
+import { ScheduleModule } from '@nestjs/schedule';
+
 @Module({
   imports: [
     HttpModule.register({
@@ -14,8 +17,9 @@ import { HomeService } from './home.service';
         },
       ],
     }),
+    TypeOrmModule.forFeature([Album, Songs]),
+    ScheduleModule.forRoot(),
   ],
-  controllers: [HomeController],
-  providers: [HomeService],
+  providers: [TimingService],
 })
-export class HomeModule {}
+export class TimingModule {}
