@@ -1,4 +1,4 @@
-import { Banner } from 'src/server/timing/entity/timing.entity';
+import { Album, Songs } from 'src/server/timing/entity/timing.entity';
 
 // config/configuration.ts
 export default () => ({
@@ -8,6 +8,6 @@ export default () => ({
   username: process.env.USERNAME,
   password: process.env.DB_PASSWORD,
   database: 'music',
-  entities: [Banner],
+  entities: [Album, Songs],
   synchronize: true,
 });

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
-import { Cron, Interval } from '@nestjs/schedule';
+import { Cron, Interval, Timeout } from '@nestjs/schedule';
 import { lastValueFrom, map } from 'rxjs';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Album, Songs } from './entity/timing.entity';
@@ -21,7 +21,7 @@ export class TimingService {
       .pipe(map((response) => response.data));
     return lastValueFrom(observable);
   }
-  @Interval(1000 * 60 * 60)
+  // @Interval(1000 * 60 * 60)
   async getBanner() {
     await this.albumsRepository.clear();
     const res = await this.getApiData('/top/playlist?order=hot&limit=12');
@@ -37,9 +37,10 @@ export class TimingService {
     console.log('banner创建成功');
   }
 
-  @Cron('15 15 0 * * ? *')
+  // @Cron('15 15 0 * * ? *')
+  // @Interval(1000 * 5)
+  @Timeout(1000 * 5)
   async getRecommendSongs() {
-    await this.songsRepository.clear();
     const res = await this.getApiData('/recommend/songs');
     const songArr = res.data?.dailySongs;
     songArr.forEach(async (item) => {
@@ -50,31 +51,71 @@ export class TimingService {
         ar: [{ id: singer_id, name: singer }],
         al: { id: album_id, picUrl: album_cover, name: album_name },
       } = item;
-      song.name_id = name_id;
-      song.name = name;
-      song.singer_id = singer_id;
-      song.singer = singer;
-      song.album_id = album_id;
-      song.album_cover = album_cover;
-      song.album_name = album_name;
-      await this.songsRepository.save(song);
+      const obj = await this.songsRepository.findOne({ name_id });
+      if (!obj) {
+        song.name_id = name_id;
+        song.name = name;
+        song.singer_id = singer_id;
+        song.singer = singer;
+        song.album_id = album_id;
+        song.album_cover = album_cover;
+        song.album_name = album_name;
+        song.isRecommend = true;
+        await this.songsRepository.save(song);
+      } else {
+        await this.songsRepository.update(obj, { isRecommend: true });
+      }
     });
     console.log('推荐歌曲已更新');
   }
 
-  @Cron('15 20 0 * * ? *')
+  // @Cron('15 20 0 * * ? *')
+  @Timeout(1000 * 10)
   async getRecommendAlbums() {
     await this.albumsRepository.clear();
-    const res = await this.getApiData('/top/playlist/highquality?limit=50');
+    const res = await this.getApiData('/top/playlist/highquality?limit=60');
     res.playlists.forEach(async (item) => {
-      const banner = new Album();
+      const album = new Album();
       const { name, id: album_id, coverImgUrl, description } = item;
-      banner.name = name;
-      banner.album_id = album_id;
-      banner.coverImgUrl = coverImgUrl;
-      banner.description = description;
-      await this.albumsRepository.save(banner);
+      const obj = await this.albumsRepository.findOne({ album_id });
+      if (!obj) {
+        album.name = name;
+        album.album_id = album_id;
+        album.coverImgUrl = coverImgUrl;
+        album.description = description;
+        await this.albumsRepository.save(album);
+        await this.getAlbumSongs(album_id);
+      }
     });
-    console.log('banner创建成功');
+    console.log('推荐歌单创建成功');
+  }
+
+  async getAlbumSongs(id) {
+    const res = await this.getApiData(`/playlist/detail?id=${id}`);
+    res.playlist.trackIds.forEach(async (item) => {
+      const songInfo = await this.getApiData(`/song/detail?ids=${item.id}`);
+      const song = new Songs();
+      const {
+        name,
+        id: name_id,
+        ar: [{ id: singer_id, name: singer }],
+        al: { id: album_id, picUrl: album_cover, name: album_name },
+      } = songInfo.songs[0];
+      const obj = await this.songsRepository.findOne({ name_id: name_id });
+      if (!obj) {
+        song.name = name;
+        song.name_id = name_id;
+        song.singer_id = singer_id;
+        song.singer = singer;
+        song.album_id = album_id;
+        song.album_cover = album_cover;
+        song.album_name = album_name;
+        song.list_id = id;
+        await this.songsRepository.save(song);
+      } else if (id !== obj.list_id) {
+        await this.songsRepository.update(obj, { list_id: id });
+      }
+    });
+    console.log('歌单歌曲创建成功');
   }
 }

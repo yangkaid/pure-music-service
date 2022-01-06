@@ -32,4 +32,12 @@ export class Songs {
   album_id: string;
   @Column()
   album_name: string;
+  @Column({
+    default: false,
+  })
+  isRecommend: boolean;
+  @Column({
+    default: 0,
+  })
+  list_id: string;
 }
