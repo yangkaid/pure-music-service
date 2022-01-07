@@ -70,11 +70,11 @@ export class TimingService {
   }
 
   // @Cron('15 20 0 * * ? *')
-  @Timeout(1000 * 10)
+  @Timeout(1000 * 20)
   async getRecommendAlbums() {
     await this.albumsRepository.clear();
-    const res = await this.getApiData('/top/playlist/highquality?limit=60');
-    res.playlists.forEach(async (item) => {
+    const res = await this.getApiData('/top/playlist/highquality?limit=30');
+    for (const item of res.playlists) {
       const album = new Album();
       const { name, id: album_id, coverImgUrl, description } = item;
       const obj = await this.albumsRepository.findOne({ album_id });
@@ -86,13 +86,26 @@ export class TimingService {
         await this.albumsRepository.save(album);
         await this.getAlbumSongs(album_id);
       }
-    });
+    }
+    // res.playlists.forEach(async (item) => {
+    //   const album = new Album();
+    //   const { name, id: album_id, coverImgUrl, description } = item;
+    //   const obj = await this.albumsRepository.findOne({ album_id });
+    //   if (!obj) {
+    //     album.name = name;
+    //     album.album_id = album_id;
+    //     album.coverImgUrl = coverImgUrl;
+    //     album.description = description;
+    //     await this.albumsRepository.save(album);
+    //     await this.getAlbumSongs(album_id);
+    //   }
+    // });
     console.log('推荐歌单创建成功');
   }
 
   async getAlbumSongs(id) {
     const res = await this.getApiData(`/playlist/detail?id=${id}`);
-    res.playlist.trackIds.forEach(async (item) => {
+    for (const item of res.playlist.trackIds.slice(0, 50)) {
       const songInfo = await this.getApiData(`/song/detail?ids=${item.id}`);
       const song = new Songs();
       const {
@@ -112,10 +125,33 @@ export class TimingService {
         song.album_name = album_name;
         song.list_id = id;
         await this.songsRepository.save(song);
-      } else if (id !== obj.list_id) {
-        await this.songsRepository.update(obj, { list_id: id });
+      } else if (!obj.list_id.includes(id)) {
+        const newListId = obj.list_id + `,${id}`;
+        await this.songsRepository.update(obj, { list_id: newListId });
       }
-    });
-    console.log('歌单歌曲创建成功');
+    }
+    console.log('歌曲创建成功', id);
+  }
+
+  @Timeout(1000 * 60 * 5)
+  async getRankAlbums() {
+    const res = await this.getApiData('/toplist/detail');
+    for (const item of res.list) {
+      const album = new Album();
+      // eslint-disable-next-line prefer-const
+      let { name, id: album_id, coverImgUrl, description, tracks } = item;
+      const obj = await this.albumsRepository.findOne({ album_id });
+      if (!obj) {
+        tracks = JSON.stringify(tracks);
+        album.name = name;
+        album.album_id = album_id;
+        album.coverImgUrl = coverImgUrl;
+        album.description = description;
+        album.tracks = tracks;
+        await this.albumsRepository.save(album);
+        await this.getAlbumSongs(album_id);
+      }
+    }
+    console.log('榜单创建成功');
   }
 }

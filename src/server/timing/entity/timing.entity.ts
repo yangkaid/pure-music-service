@@ -12,6 +12,10 @@ export class Album {
   description: string;
   @Column()
   album_id: string;
+  @Column({
+    default: 0,
+  })
+  tracks: string;
 }
 
 @Entity('songs')
