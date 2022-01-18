@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
 import { TimingService } from './timing.service';
-import { HttpModule } from '@nestjs/axios';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Album, Songs } from './entity/timing.entity';
 import { ScheduleModule } from '@nestjs/schedule';
+import { Songs } from './entity/song.entity';
+import { Album } from './entity/album.entity';
+import { HttpModule, HttpService } from '@nestjs/axios';
 
 @Module({
   imports: [
