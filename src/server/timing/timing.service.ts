@@ -22,21 +22,6 @@ export class TimingService {
       .pipe(map((response) => response.data));
     return lastValueFrom(observable);
   }
-  // @Interval(1000 * 60 * 60)
-  async getBanner() {
-    await this.albumsRepository.clear();
-    const res = await this.getApiData('/top/playlist?order=hot&limit=12');
-    res.playlists.forEach(async (item) => {
-      const banner = new Album();
-      const { name, id: album_id, coverImgUrl, description } = item;
-      banner.name = name;
-      banner.album_id = album_id;
-      banner.coverImgUrl = coverImgUrl;
-      banner.description = description;
-      await this.albumsRepository.save(banner);
-    });
-    console.log('banner创建成功');
-  }
 
   // @Cron('15 15 0 * * ? *')
   // @Interval(1000 * 5)
@@ -44,14 +29,16 @@ export class TimingService {
   async getRecommendSongs() {
     const res = await this.getApiData('/recommend/songs');
     const songArr = res.data?.dailySongs;
-    const album = new Album();
     const recommend_album = await this.albumsRepository.findOne({
       album_id: '000000',
     });
+    console.log(recommend_album);
     if (!recommend_album) {
+      const album = new Album();
       album.album_id = '000000';
       album.name = '推荐歌曲';
       album.description = '这个歌单是今天的推荐歌曲，每日更新';
+      album.coverImgUrl = 'default';
       this.albumsRepository.save(album);
     }
     songArr.forEach(async (item) => {
@@ -71,8 +58,9 @@ export class TimingService {
         song.album_id = album_id;
         song.album_cover = album_cover;
         song.album_name = album_name;
-        song.album_list = [album];
+        song.album_list = [recommend_album];
         await this.songsRepository.save(song);
+        console.log('保存歌曲完成');
       }
     });
     console.log('推荐歌曲已更新');
@@ -130,10 +118,11 @@ export class TimingService {
     console.log('歌曲创建成功', id);
   }
 
-  @Timeout(1000 * 60 * 2)
+  // @Timeout(1000 * 60)
   async getRankAlbums() {
+    console.log('开始');
     const res = await this.getApiData('/toplist/detail');
-    for (const item of res.list) {
+    for (const item of res.list.slice(0, 6)) {
       const album = new Album();
       // eslint-disable-next-line prefer-const
       let { name, id: album_id, coverImgUrl, description, tracks } = item;

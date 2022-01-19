@@ -5,6 +5,7 @@ import { HomeModule } from './server/home/home.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TimingModule } from './server/timing/timing.module';
+import { BannerModule } from './server/banner/banner.module';
 import envConfig from '../config/env';
 
 @Module({
@@ -29,6 +30,7 @@ import envConfig from '../config/env';
     }),
     HomeModule,
     TimingModule,
+    BannerModule,
   ],
   controllers: [AppController],
   providers: [AppService],
