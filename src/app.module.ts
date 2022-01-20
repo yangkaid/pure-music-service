@@ -6,7 +6,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TimingModule } from './server/timing/timing.module';
 import { BannerModule } from './server/banner/banner.module';
-import envConfig from '../config/env';
 
 @Module({
   imports: [

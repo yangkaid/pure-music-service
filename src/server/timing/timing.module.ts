@@ -4,12 +4,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleModule } from '@nestjs/schedule';
 import { Songs } from './entity/song.entity';
 import { Album } from './entity/album.entity';
-import { HttpModule, HttpService } from '@nestjs/axios';
+import { HttpModule } from '@nestjs/axios';
 
 @Module({
   imports: [
     HttpModule.register({
-      baseURL: 'https://pure-music-service.vercel.app',
       withCredentials: true,
       transformRequest: [
         function (data, headers) {

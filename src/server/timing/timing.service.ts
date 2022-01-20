@@ -9,6 +9,8 @@ import { Songs } from './entity/song.entity';
 
 @Injectable()
 export class TimingService {
+  qq: 'http://139.196.195.142:3300';
+  wangyi: 'https://pure-music-service.vercel.app';
   constructor(
     private httpService: HttpService,
     @InjectRepository(Album)
@@ -16,9 +18,9 @@ export class TimingService {
     @InjectRepository(Songs)
     private songsRepository: Repository<Songs>,
   ) {}
-  async getApiData(url): Promise<any> {
+  async getApiData(url, type): Promise<any> {
     const observable = this.httpService
-      .get(url)
+      .get(type + url)
       .pipe(map((response) => response.data));
     return lastValueFrom(observable);
   }
@@ -27,12 +29,11 @@ export class TimingService {
   // @Interval(1000 * 5)
   // @Timeout(1000 * 5)
   async getRecommendSongs() {
-    const res = await this.getApiData('/recommend/songs');
+    const res = await this.getApiData('/recommend/songs', this.wangyi);
     const songArr = res.data?.dailySongs;
     const recommend_album = await this.albumsRepository.findOne({
       album_id: '000000',
     });
-    console.log(recommend_album);
     if (!recommend_album) {
       const album = new Album();
       album.album_id = '000000';

@@ -3,16 +3,13 @@ import {
   Get,
   Post,
   Body,
-  Patch,
-  Param,
   Delete,
   UploadedFile,
   UseInterceptors,
+  Query,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { BannerService } from './banner.service';
-import { CreateBannerDto } from './dto/create-banner.dto';
-import { UpdateBannerDto } from './dto/update-banner.dto';
 
 @Controller('banner')
 export class BannerController {
@@ -21,11 +18,7 @@ export class BannerController {
   @Post()
   @UseInterceptors(FileInterceptor('file'))
   async create(@UploadedFile() file, @Body() body) {
-    console.log(file);
-    console.log(body);
-    console.log('进入controller');
-    const res = await this.bannerService.create(file, body);
-    return res;
+    return this.bannerService.create(file, body);
   }
 
   @Get()
@@ -33,18 +26,12 @@ export class BannerController {
     return this.bannerService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.bannerService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateBannerDto: UpdateBannerDto) {
-    return this.bannerService.update(+id, updateBannerDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
+  @Delete()
+  remove(@Query('id') id: string) {
     return this.bannerService.remove(+id);
+  }
+  @Get('delete')
+  remmoveAll() {
+    return this.bannerService.removeAll();
   }
 }

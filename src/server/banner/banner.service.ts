@@ -19,31 +19,31 @@ export class BannerService {
     const arr = file.originalname.split('.');
     const fileType = arr[arr.length - 1];
     const fileName = currentSign + '.' + fileType;
-    console.log(join(__dirname, '..', 'banner'));
     fs.writeFileSync(`public/${fileName}`, buffer);
-    const src = 'banner' + fileName;
+    const src = process.env.LOCALHOST + '/' + fileName;
     const banner = new Banner();
     banner.coverImgUrl = src;
     banner.album_id = body.album_id;
     banner.description = body.description;
-    banner.sign = currentSign;
+    banner.sign = fileName;
     const res = this.bannerRepository.save(banner);
     return res;
   }
 
   findAll() {
-    return `This action returns all banner`;
+    return this.bannerRepository.query(`SELECT * FROM banner`);
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} banner`;
+  async remove(id: number) {
+    const banner: any = await this.bannerRepository.find({ id });
+    console.log(banner);
+    fs.unlinkSync(`public/${banner[0].sign}`);
+    this.bannerRepository.delete({ id });
+    return `删除成功${id}`;
   }
 
-  update(id: number, updateBannerDto: UpdateBannerDto) {
-    return `This action updates a #${id} banner`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} banner`;
+  removeAll() {
+    this.bannerRepository.clear();
+    return '全部删除';
   }
 }
